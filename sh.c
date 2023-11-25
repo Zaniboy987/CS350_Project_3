@@ -57,11 +57,11 @@ struct cmd *parsecmd(char*);
 void
 runcmd(struct cmd *cmd)
 {
-  //int p[2];
+  int p[2];
   //struct backcmd *bcmd;
   struct execcmd *ecmd;
-  //struct listcmd *lcmd;
-  //struct pipecmd *pcmd;
+  struct listcmd *lcmd;
+  struct pipecmd *pcmd;
   //struct redircmd *rcmd;
   
   if(cmd == 0)
@@ -84,11 +84,46 @@ runcmd(struct cmd *cmd)
     break;
 
   case LIST:
-    printf(2, "List Not Implemented\n");
+    lcmd = (struct listcmd*)cmd;
+
+    int lid = fork1();
+    if(lid == 0)
+    {
+      runcmd(lcmd->left);
+      exit();
+    }
+    wait();
+    runcmd(lcmd->right);
     break;
 
   case PIPE:
-    printf(2, "Pipe Not implemented\n");
+    pcmd = (struct pipecmd*)cmd;
+    pipe(p);
+
+    int pid = fork1();
+    if(pid < 0) 
+    {
+      panic("fork");
+    } 
+    else if(pid == 0) 
+    { // Child process
+      close(0);
+      dup(p[0]);
+      close(p[1]);
+      // Execute the right side of the pipeline
+      runcmd(pcmd->right);
+      exit();
+    } 
+    else 
+    { // Parent process
+      close(1);
+      dup(p[1]);
+      close(p[0]);
+      // Execute the left side of the pipeline
+      runcmd(pcmd->left);
+      // Wait for the child process to complete
+      wait();
+    }
     break;
 
   case BACK:
