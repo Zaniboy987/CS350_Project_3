@@ -48,6 +48,14 @@ struct backcmd {
   int type;
   struct cmd *cmd;
 };
+// --------------------------------------------------------------
+// NEWLY INCLUDED
+struct bgcmd {
+  int type;
+  struct cmd *cmd;
+  int pid; // Process ID of the background process
+};
+// --------------------------------------------------------------
 
 int fork1(void);  // Fork but panics on failure.
 void panic(char*);
