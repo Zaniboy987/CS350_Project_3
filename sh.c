@@ -54,15 +54,6 @@ struct backcmd
   int type;
   struct cmd *cmd;
 };
-// --------------------------------------------------------------
-// NEWLY INCLUDED
-struct bgcmd
-{
-  int type;
-  struct cmd *cmd;
-  int pid; // Process ID of the background process
-};
-// --------------------------------------------------------------
 
 int fork1(void); // Fork but panics on failure.
 void panic(char *);
@@ -72,7 +63,7 @@ struct cmd *parsecmd(char *);
 void runcmd(struct cmd *cmd)
 {
   int p[2];
-  // struct backcmd *bcmd;
+  struct backcmd *bcmd;
   struct execcmd *ecmd;
   struct listcmd *lcmd;
   struct pipecmd *pcmd;
@@ -155,7 +146,15 @@ void runcmd(struct cmd *cmd)
     break;
 
   case BACK:
-    printf(2, "Backgrounding not implemented\n");
+    bcmd = (struct backcmd *)cmd;
+    int bpid = fork1();
+
+    if (bpid == 0)
+    {
+      // Child process
+      runcmd(bcmd->cmd);
+      exit();
+    }
     break;
   }
   exit();
